@@ -1,0 +1,24 @@
+<nav class="navbar" *ngIf="isAuthenticated">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" alt="Pokédex"
+        class="logo">
+      <span class="brand-name">Pokédex</span>
+    </div>
+
+    <div class="navbar-menu">
+      <a routerLink="/pokemons" routerLinkActive="active" class="nav-link">
+        Pokémon
+      </a>
+      <a routerLink="/profile" routerLinkActive="active" class="nav-link">
+        Perfil
+      </a>
+      <div class="user-info">
+        <span class="user-name">{{ nickname }}</span>
+        <button (click)="logout()" class="logout-btn">
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
