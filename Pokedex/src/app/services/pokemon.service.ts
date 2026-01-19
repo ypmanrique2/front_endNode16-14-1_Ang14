@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 
+// Modelo de dominio Pokémon usado en toda la app
 export interface Pokemon {
   id: number;
   name: string;
@@ -15,35 +16,48 @@ export interface Pokemon {
 }
 
 @Injectable({
+  // Servicio singleton para consumo de la PokeAPI
   providedIn: 'root'
 })
 export class PokemonService {
+
+  // URL base de la PokeAPI
   private baseUrl = 'https://pokeapi.co/api/v2';
 
   constructor(private http: HttpClient) {}
 
+  //Obtiene un Pokémon por ID
   getPokemonById(id: number): Observable<Pokemon> {
-  return this.http.get<any>(`${this.baseUrl}/pokemon/${id}`).pipe(
-    map(data => this.formatPokemon(data))
-  );
-}
+    return this.http
+      .get<any>(`${this.baseUrl}/pokemon/${id}`)
+      .pipe(
+        // Normaliza la respuesta al modelo interno
+        map(data => this.formatPokemon(data))
+      );
+  }
 
+  // Obtiene una lista paginada de Pokémon
   getPokemons(limit = 20, offset = 0): Observable<Pokemon[]> {
     return this.http
       .get<{ results: { url: string }[] }>(
         `${this.baseUrl}/pokemon?limit=${limit}&offset=${offset}`
       )
       .pipe(
+        // Convierte cada URL en un request individual
         switchMap(response => {
-          const requests: Observable<any | null>[] = response.results.map(p =>
-            this.http.get<any>(p.url).pipe(
-              catchError(() => of(null))
-            )
-          );
+          const requests: Observable<any | null>[] =
+            response.results.map(p =>
+              this.http.get<any>(p.url).pipe(
+                // Manejo de errores por Pokémon individual
+                catchError(() => of(null))
+              )
+            );
 
+          // Ejecuta todos los requests en paralelo
           return forkJoin(requests) as Observable<(any | null)[]>;
         }),
-        map((pokemons: (any | null)[]) =>
+        // Filtra respuestas inválidas y formatea datos
+        map(pokemons =>
           pokemons
             .filter((p): p is any => p !== null)
             .map(p => this.formatPokemon(p))
@@ -51,24 +65,28 @@ export class PokemonService {
       );
   }
 
+  // Obtiene Pokémon filtrados por tipo
   getPokemonsByType(type: string): Observable<Pokemon[]> {
     return this.http
       .get<{ pokemon: { pokemon: { url: string } }[] }>(
         `${this.baseUrl}/type/${type}`
       )
       .pipe(
+        // Limita resultados y obtiene detalle de cada Pokémon
         switchMap(response => {
-          const requests: Observable<any | null>[] = response.pokemon
-            .slice(0, 20)
-            .map(p =>
-              this.http.get<any>(p.pokemon.url).pipe(
-                catchError(() => of(null))
-              )
-            );
+          const requests: Observable<any | null>[] =
+            response.pokemon
+              .slice(0, 20)
+              .map(p =>
+                this.http.get<any>(p.pokemon.url).pipe(
+                  catchError(() => of(null))
+                )
+              );
 
           return forkJoin(requests) as Observable<(any | null)[]>;
         }),
-        map((pokemons: (any | null)[]) =>
+        // Limpia errores y normaliza resultados
+        map(pokemons =>
           pokemons
             .filter((p): p is any => p !== null)
             .map(p => this.formatPokemon(p))
@@ -76,43 +94,51 @@ export class PokemonService {
       );
   }
 
+  // Obtiene los Pokémon con mayor poder total
   getStrongestPokemons(limit = 20): Observable<Pokemon[]> {
-  return this.getPokemons(50, 0).pipe(
-    map(pokemons =>
-      pokemons
-        .map(p => ({
-          ...p,
-          totalStats: p.stats.reduce((sum, s) => sum + s.value, 0)
-        }))
-        .sort((a, b) => b.totalStats - a.totalStats)
-        .slice(0, limit)
-    )
-  );
-}
+    return this.getPokemons(50, 0).pipe(
+      map(pokemons =>
+        pokemons
+          // Calcula suma total de stats
+          .map(p => ({
+            ...p,
+            totalStats: p.stats.reduce((sum, s) => sum + s.value, 0)
+          }))
+          // Ordena de mayor a menor poder
+          .sort((a, b) => b.totalStats - a.totalStats)
+          // Limita resultados
+          .slice(0, limit)
+      )
+    );
+  }
 
-getPopularPokemons(): Observable<Pokemon[]> {
-  // Generación 1
-  return this.getPokemons(20, 0);
-}
+  // Obtiene Pokémon populares (Generación 1)
+  getPopularPokemons(): Observable<Pokemon[]> {
+    return this.getPokemons(20, 0);
+  }
 
-getLegendaryPokemons(): Observable<Pokemon[]> {
-  const legendaryIds = [
-    144, 145, 146, 150, 151,
-    243, 244, 245,
-    249, 250, 251,
-    377, 378, 379,
-    380, 381, 382, 383, 384, 385
-  ];
+  // Obtiene Pokémon legendarios por IDs conocidos
+  getLegendaryPokemons(): Observable<Pokemon[]> {
+    const legendaryIds = [
+      144, 145, 146, 150, 151,
+      243, 244, 245,
+      249, 250, 251,
+      377, 378, 379,
+      380, 381, 382, 383, 384, 385
+    ];
 
-  return forkJoin(
-    legendaryIds.map(id => this.getPokemonById(id))
-  );
-}
+    // Ejecuta todos los requests en paralelo
+    return forkJoin(
+      legendaryIds.map(id => this.getPokemonById(id))
+    );
+  }
 
+  // Normaliza la respuesta cruda de la API
   private formatPokemon(data: any): Pokemon {
     return {
       id: data.id,
       name: data.name,
+      // Prioriza artwork oficial
       image:
         data.sprites.other['official-artwork'].front_default ??
         data.sprites.front_default,

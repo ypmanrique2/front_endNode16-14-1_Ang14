@@ -9,6 +9,8 @@ import { UserService, UserProfile } from '../../services/user.service';
   styleUrls: ['./user-profile.component.scss']
 })
 export class UserProfileComponent implements OnInit {
+
+    // Modelo local del perfil del usuario
     profile: UserProfile = {
     nickname: '',
     email: '',
@@ -17,13 +19,20 @@ export class UserProfileComponent implements OnInit {
     favoriteMovieGenres: [] as string[]
   };
 
+  // Estado de edición del perfil
   editMode: boolean = false;
+  // Indicador visual de guardado exitoso
   savedMessage: boolean = false;
+  // Control del modal selector de Pokémon
   showPokemonSelector: boolean = false;
+  // Lista de Pokémon disponibles para seleccionar avatar
   availablePokemons: Pokemon[] = [];
+  // Estado de carga de Pokémon
   loadingPokemons: boolean = false;
+  // Término de búsqueda de Pokémon
   searchTerm: string = '';
 
+  // Tipos de Pokémon disponibles (usados como preferencias)
   availableTypes = [
     'fire', 'water', 'grass', 'electric', 'psychic',
     'dragon', 'normal', 'fighting', 'flying', 'poison',
@@ -31,6 +40,7 @@ export class UserProfileComponent implements OnInit {
     'ice', 'dark', 'fairy'
   ];
 
+  // Géneros de películas disponibles como preferencias
   movieGenres = [
   'Accion',
   'Aventura',
@@ -43,6 +53,7 @@ export class UserProfileComponent implements OnInit {
   'Suspenso'
 ];
 
+// Asigna colores tipo Pokémon a géneros de películas
 getMovieGenreColor(genre: string): string {
   const map: { [key: string]: string } = {
     Accion: '#C03028',
@@ -59,6 +70,7 @@ getMovieGenreColor(genre: string): string {
   return map[genre] || '#A8A878';
 }
 
+// Verifica si un género de película está seleccionado
   isMovieGenreSelected(genre: string): boolean {
   return this.profile.favoriteMovieGenres.includes(genre);
 }
@@ -68,6 +80,7 @@ getMovieGenreColor(genre: string): string {
     private pokemonService: PokemonService
   ) { }
 
+  // Inicializa el perfil desde sessionStorage
   ngOnInit(): void {
   const storedProfile = sessionStorage.getItem('userProfile');
   if (storedProfile) {
@@ -75,10 +88,12 @@ getMovieGenreColor(genre: string): string {
   }
 }
 
+// Recarga el perfil original desde el servicio
   loadProfile(): void {
     this.profile = { ...this.userService.getUserProfile() };
   }
 
+  // Activa o cancela el modo edición
   toggleEditMode(): void {
     if (this.editMode) {
       this.loadProfile();
@@ -86,6 +101,7 @@ getMovieGenreColor(genre: string): string {
     this.editMode = !this.editMode;
   }
 
+  // Agrega o elimina un género de película del perfil
 toggleMovieGenre(genre: string): void {
   if (!this.editMode) return;
 
@@ -98,6 +114,7 @@ toggleMovieGenre(genre: string): void {
   }
 }
 
+// Guarda el perfil en sessionStorage
   saveProfile(): void {
   sessionStorage.setItem('userProfile', JSON.stringify(this.profile));
   this.savedMessage = true;
@@ -106,6 +123,7 @@ toggleMovieGenre(genre: string): void {
   setTimeout(() => (this.savedMessage = false), 3000);
 }
 
+// Agrega o elimina un tipo de Pokémon favorito
   toggleType(type: string): void {
     const index = this.profile.favoriteTypes.indexOf(type);
     if (index > -1) {
@@ -115,20 +133,24 @@ toggleMovieGenre(genre: string): void {
     }
   }
 
+  // Verifica si un tipo de Pokémon está seleccionado
   isTypeSelected(type: string): boolean {
     return this.profile.favoriteTypes.includes(type);
   }
 
+   // Abre el selector de Pokémon para avatar
   openPokemonSelector(): void {
     this.showPokemonSelector = true;
     this.loadPopularPokemons();
   }
 
+  // Cierra el selector de Pokémon
   closePokemonSelector(): void {
     this.showPokemonSelector = false;
     this.searchTerm = '';
   }
 
+  // Carga Pokémon populares desde la API
   loadPopularPokemons(): void {
     this.loadingPokemons = true;
     this.pokemonService.getPokemons(50, 0).subscribe({
@@ -143,6 +165,7 @@ toggleMovieGenre(genre: string): void {
     });
   }
 
+  // Busca Pokémon por ID o nombre
   searchPokemon(): void {
     if (!this.searchTerm.trim()) {
       this.loadPopularPokemons();
@@ -165,7 +188,7 @@ toggleMovieGenre(genre: string): void {
         }
       });
     } else {
-      // Buscar por nombre en los primeros 151
+      // Buscar por nombre en los primeros 151 elementos
       this.pokemonService.getPokemons(151, 0).subscribe({
         next: (data) => {
           this.availablePokemons = data.filter(p =>
@@ -181,11 +204,13 @@ toggleMovieGenre(genre: string): void {
     }
   }
 
+  // Selecciona un Pokémon como avatar del perfil
   selectPokemonAvatar(pokemon: Pokemon): void {
     this.profile.avatar = pokemon.image;
     this.closePokemonSelector();
   }
 
+  // Retorna el color asociado a un tipo de Pokémon
   getTypeColor(type: string): string {
     const colors: { [key: string]: string } = {
       fire: '#F08030',
