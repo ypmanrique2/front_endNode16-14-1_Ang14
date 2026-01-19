@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
+import { PokemonService, Pokemon } from '../../services/pokemon.service';
 import { UserService, UserProfile } from '../../services/user.service';
 
 @Component({
@@ -17,6 +18,10 @@ export class UserProfileComponent implements OnInit {
 
   editMode: boolean = false;
   savedMessage: boolean = false;
+  showPokemonSelector: boolean = false;
+  availablePokemons: Pokemon[] = [];
+  loadingPokemons: boolean = false;
+  searchTerm: string = '';
 
   availableTypes = [
     'fire', 'water', 'grass', 'electric', 'psychic',
@@ -25,7 +30,10 @@ export class UserProfileComponent implements OnInit {
     'ice', 'dark', 'fairy'
   ];
 
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private pokemonService: PokemonService
+  ) {}
 
   ngOnInit(): void {
     this.loadProfile();
@@ -63,6 +71,73 @@ export class UserProfileComponent implements OnInit {
 
   isTypeSelected(type: string): boolean {
     return this.profile.favoriteTypes.includes(type);
+  }
+
+  openPokemonSelector(): void {
+    this.showPokemonSelector = true;
+    this.loadPopularPokemons();
+  }
+
+  closePokemonSelector(): void {
+    this.showPokemonSelector = false;
+    this.searchTerm = '';
+  }
+
+  loadPopularPokemons(): void {
+    this.loadingPokemons = true;
+    this.pokemonService.getPokemons(50, 0).subscribe({
+      next: (data) => {
+        this.availablePokemons = data;
+        this.loadingPokemons = false;
+      },
+      error: (error) => {
+        console.error('Error loading pokemons:', error);
+        this.loadingPokemons = false;
+      }
+    });
+  }
+
+  searchPokemon(): void {
+    if (!this.searchTerm.trim()) {
+      this.loadPopularPokemons();
+      return;
+    }
+
+    this.loadingPokemons = true;
+    const searchId = parseInt(this.searchTerm);
+
+    if (!isNaN(searchId) && searchId > 0) {
+      this.pokemonService.getPokemonById(searchId).subscribe({
+        next: (pokemon) => {
+          this.availablePokemons = [pokemon];
+          this.loadingPokemons = false;
+        },
+        error: (error) => {
+          console.error('Pokemon not found:', error);
+          this.availablePokemons = [];
+          this.loadingPokemons = false;
+        }
+      });
+    } else {
+      // Buscar por nombre en los primeros 151
+      this.pokemonService.getPokemons(151, 0).subscribe({
+        next: (data) => {
+          this.availablePokemons = data.filter(p =>
+            p.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+          );
+          this.loadingPokemons = false;
+        },
+        error: (error) => {
+          console.error('Error searching pokemon:', error);
+          this.loadingPokemons = false;
+        }
+      });
+    }
+  }
+
+  selectPokemonAvatar(pokemon: Pokemon): void {
+    this.profile.avatar = pokemon.image;
+    this.closePokemonSelector();
   }
 
   getTypeColor(type: string): string {

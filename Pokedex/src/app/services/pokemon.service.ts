@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Observable, forkJoin } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
 
 export interface Pokemon {
   id: number;
@@ -18,65 +18,70 @@ export interface Pokemon {
   providedIn: 'root'
 })
 export class PokemonService {
-
   private baseUrl = 'https://pokeapi.co/api/v2';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  // Obtener el listado general con una paginación
-  getPokemons(limit: number = 20, offset: number = 0): Observable<Pokemon[]> {
+  getPokemonById(id: number): Observable<Pokemon> {
+  return this.http.get<any>(`${this.baseUrl}/pokemon/${id}`).pipe(
+    map(data => this.formatPokemon(data))
+  );
+}
+
+  getPokemons(limit = 20, offset = 0): Observable<Pokemon[]> {
     return this.http
-      .get<any>(`${this.baseUrl}/pokemon?limit=${limit}&offset=${offset}`)
+      .get<{ results: { url: string }[] }>(
+        `${this.baseUrl}/pokemon?limit=${limit}&offset=${offset}`
+      )
       .pipe(
         switchMap(response => {
-          // Se Crea un array de observables para obtener los detalles de cada item
-          const requests = response.results.map((p: any) =>
-            this.http.get<any>(p.url)
+          const requests: Observable<any | null>[] = response.results.map(p =>
+            this.http.get<any>(p.url).pipe(
+              catchError(() => of(null))
+            )
           );
-          // forkJoin espera a que todos se completen
-          return forkJoin(requests) as Observable<any[]>;
+
+          return forkJoin(requests) as Observable<(any | null)[]>;
         }),
-        map((pokemons: any[]) =>
-          pokemons.map((p: any) => this.formatPokemon(p))
+        map((pokemons: (any | null)[]) =>
+          pokemons
+            .filter((p): p is any => p !== null)
+            .map(p => this.formatPokemon(p))
         )
       );
   }
 
-  // Obtener un solo Pokemon por ID
-  getPokemonById(id: number): Observable<Pokemon> {
-    return this.http
-      .get<any>(`${this.baseUrl}/pokemon/${id}`)
-      .pipe(map((p: any) => this.formatPokemon(p)));
-  }
-
-  // Obtener Pokemons filtrados por tipos
   getPokemonsByType(type: string): Observable<Pokemon[]> {
     return this.http
-      .get<any>(`${this.baseUrl}/type/${type}`)
+      .get<{ pokemon: { pokemon: { url: string } }[] }>(
+        `${this.baseUrl}/type/${type}`
+      )
       .pipe(
         switchMap(response => {
-          // Limitamos a 20 para no saturar la vista inicial
-          const requests = response.pokemon
+          const requests: Observable<any | null>[] = response.pokemon
             .slice(0, 20)
-            .map((p: any) =>
-              this.http.get<any>(p.pokemon.url)
+            .map(p =>
+              this.http.get<any>(p.pokemon.url).pipe(
+                catchError(() => of(null))
+              )
             );
-          return forkJoin(requests) as Observable<any[]>;
+
+          return forkJoin(requests) as Observable<(any | null)[]>;
         }),
-        map((pokemons: any[]) =>
-          pokemons.map((p: any) => this.formatPokemon(p))
+        map((pokemons: (any | null)[]) =>
+          pokemons
+            .filter((p): p is any => p !== null)
+            .map(p => this.formatPokemon(p))
         )
       );
   }
 
-  // Método privado para formatear la data cruda de la API a la interfaz
   private formatPokemon(data: any): Pokemon {
     return {
       id: data.id,
       name: data.name,
-      // Se prioriza el arte oficial, si no existe se usa el sprite por defecto
       image:
-        data.sprites.other['official-artwork'].front_default ||
+        data.sprites.other['official-artwork'].front_default ??
         data.sprites.front_default,
       types: data.types.map((t: any) => t.type.name),
       height: data.height,

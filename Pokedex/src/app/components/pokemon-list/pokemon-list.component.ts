@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
+import { forkJoin } from 'rxjs';
+
 import { PokemonService, Pokemon } from '../../services/pokemon.service';
 
 @Component({
@@ -17,12 +19,15 @@ export class PokemonListComponent implements OnInit {
 
   pokemonTypes = [
     { value: 'all', label: 'Todos' },
-    { value: 'fire', label: 'Fuego' },
-    { value: 'water', label: 'Agua' },
-    { value: 'grass', label: 'Planta' },
-    { value: 'electric', label: 'Eléctrico' },
-    { value: 'psychic', label: 'Psíquico' },
-    { value: 'dragon', label: 'Dragón' }
+    { value: 'strongest', label: '💪 Más Fuertes' },
+    { value: 'popular', label: '⭐ Más Populares' },
+    { value: 'legendary', label: '👑 Legendarios' },
+    { value: 'fire', label: '🔥 Fuego' },
+    { value: 'water', label: '💧 Agua' },
+    { value: 'grass', label: '🌿 Planta' },
+    { value: 'electric', label: '⚡ Eléctrico' },
+    { value: 'psychic', label: '🔮 Psíquico' },
+    { value: 'dragon', label: '🐉 Dragón' }
   ];
 
   selectedPokemon: Pokemon | null = null;
@@ -54,6 +59,12 @@ export class PokemonListComponent implements OnInit {
 
     if (filterValue === 'all') {
       this.loadPokemons();
+    } else if (filterValue === 'strongest') {
+      this.loadStrongestPokemons();
+    } else if (filterValue === 'popular') {
+      this.loadPopularPokemons();
+    } else if (filterValue === 'legendary') {
+      this.loadLegendaryPokemons();
     } else {
       this.pokemonService.getPokemonsByType(filterValue).subscribe({
         next: (data) => {
@@ -66,6 +77,59 @@ export class PokemonListComponent implements OnInit {
         }
       });
     }
+  }
+
+  loadStrongestPokemons(): void {
+    this.pokemonService.getPokemons(50, 0).subscribe({
+      next: (data) => {
+        // Ordenar por estadísticas totales (más fuertes primero)
+        this.filteredPokemons = data
+          .map(p => ({
+            ...p,
+            totalStats: p.stats.reduce((sum, stat) => sum + stat.value, 0)
+          }))
+          .sort((a: any, b: any) => b.totalStats - a.totalStats)
+          .slice(0, 20);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading strongest pokemons:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  loadPopularPokemons(): void {
+    // Pokémon populares: primeros 151 (generación 1) que son los más conocidos
+    this.pokemonService.getPokemons(20, 0).subscribe({
+      next: (data) => {
+        this.filteredPokemons = data;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading popular pokemons:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  loadLegendaryPokemons(): void {
+    // IDs de algunos Pokémon legendarios conocidos
+    const legendaryIds = [144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251, 377, 378, 379, 380, 381, 382, 383, 384, 385];
+    this.loading = true;
+
+    const requests = legendaryIds.map(id => this.pokemonService.getPokemonById(id));
+
+    forkJoin(requests).subscribe({
+      next: (data) => {
+        this.filteredPokemons = data;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading legendary pokemons:', error);
+        this.loading = false;
+      }
+    });
   }
 
   loadMore(): void {
