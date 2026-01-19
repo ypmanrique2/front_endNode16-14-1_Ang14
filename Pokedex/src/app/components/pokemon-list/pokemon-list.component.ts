@@ -79,27 +79,31 @@ export class PokemonListComponent implements OnInit {
     }
   }
 
-  loadStrongestPokemons(): void {
-    this.pokemonService.getPokemons(50, 0).subscribe({
-      next: (data) => {
-        // Ordenar por estadísticas totales (más fuertes primero)
-        this.filteredPokemons = data
-          .map(p => ({
-            ...p,
-            totalStats: p.stats.reduce((sum, stat) => sum + stat.value, 0)
-          }))
-          .sort((a: any, b: any) => b.totalStats - a.totalStats)
-          .slice(0, 20);
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading strongest pokemons:', error);
-        this.loading = false;
-      }
-    });
-  }
+  loadStrongestPokemons() {
+  this.loading = true;
+  this.pokemonService.getStrongestPokemons().subscribe(data => {
+    this.filteredPokemons = data;
+    this.loading = false;
+  });
+}
 
-  loadPopularPokemons(): void {
+loadPopularPokemons() {
+  this.loading = true;
+  this.pokemonService.getPopularPokemons().subscribe(data => {
+    this.filteredPokemons = data;
+    this.loading = false;
+  });
+}
+
+loadLegendaryPokemons() {
+  this.loading = true;
+  this.pokemonService.getLegendaryPokemons().subscribe(data => {
+    this.filteredPokemons = data;
+    this.loading = false;
+  });
+}
+
+  /* loadPopularPokemons(): void {
     // Pokémon populares: primeros 151 (generación 1) que son los más conocidos
     this.pokemonService.getPokemons(20, 0).subscribe({
       next: (data) => {
@@ -130,7 +134,7 @@ export class PokemonListComponent implements OnInit {
         this.loading = false;
       }
     });
-  }
+  } */
 
   loadMore(): void {
     this.offset += this.limit;
