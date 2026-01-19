@@ -32,7 +32,7 @@ export class PokemonListComponent implements OnInit {
 
   selectedPokemon: Pokemon | null = null;
 
-  constructor(private pokemonService: PokemonService) {}
+  constructor(private pokemonService: PokemonService) { }
 
   ngOnInit(): void {
     this.loadPokemons();
@@ -80,61 +80,28 @@ export class PokemonListComponent implements OnInit {
   }
 
   loadStrongestPokemons() {
-  this.loading = true;
-  this.pokemonService.getStrongestPokemons().subscribe(data => {
-    this.filteredPokemons = data;
-    this.loading = false;
-  });
-}
-
-loadPopularPokemons() {
-  this.loading = true;
-  this.pokemonService.getPopularPokemons().subscribe(data => {
-    this.filteredPokemons = data;
-    this.loading = false;
-  });
-}
-
-loadLegendaryPokemons() {
-  this.loading = true;
-  this.pokemonService.getLegendaryPokemons().subscribe(data => {
-    this.filteredPokemons = data;
-    this.loading = false;
-  });
-}
-
-  /* loadPopularPokemons(): void {
-    // Pokémon populares: primeros 151 (generación 1) que son los más conocidos
-    this.pokemonService.getPokemons(20, 0).subscribe({
-      next: (data) => {
-        this.filteredPokemons = data;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading popular pokemons:', error);
-        this.loading = false;
-      }
+    this.loading = true;
+    this.pokemonService.getStrongestPokemons().subscribe(data => {
+      this.filteredPokemons = data;
+      this.loading = false;
     });
   }
 
-  loadLegendaryPokemons(): void {
-    // IDs de algunos Pokémon legendarios conocidos
-    const legendaryIds = [144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251, 377, 378, 379, 380, 381, 382, 383, 384, 385];
+  loadPopularPokemons() {
     this.loading = true;
-
-    const requests = legendaryIds.map(id => this.pokemonService.getPokemonById(id));
-
-    forkJoin(requests).subscribe({
-      next: (data) => {
-        this.filteredPokemons = data;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading legendary pokemons:', error);
-        this.loading = false;
-      }
+    this.pokemonService.getPopularPokemons().subscribe(data => {
+      this.filteredPokemons = data;
+      this.loading = false;
     });
-  } */
+  }
+
+  loadLegendaryPokemons() {
+    this.loading = true;
+    this.pokemonService.getLegendaryPokemons().subscribe(data => {
+      this.filteredPokemons = data;
+      this.loading = false;
+    });
+  }
 
   loadMore(): void {
     this.offset += this.limit;

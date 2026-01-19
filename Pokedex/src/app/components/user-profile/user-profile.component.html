@@ -24,20 +24,12 @@
 
         <div class="form-group">
           <label>Nickname</label>
-          <input
-            type="text"
-            [(ngModel)]="profile.nickname"
-            [disabled]="!editMode"
-            placeholder="Tu nickname">
+          <input type="text" [(ngModel)]="profile.nickname" [disabled]="!editMode" placeholder="Tu nickname">
         </div>
 
         <div class="form-group">
           <label>Email</label>
-          <input
-            type="email"
-            [(ngModel)]="profile.email"
-            [disabled]="!editMode"
-            placeholder="tu@email.com">
+          <input type="email" [(ngModel)]="profile.email" [disabled]="!editMode" placeholder="tu@email.com">
         </div>
       </div>
 
@@ -48,14 +40,10 @@
         </p>
 
         <div class="types-grid">
-          <button
-            *ngFor="let type of availableTypes"
-            class="type-button"
-            [class.selected]="isTypeSelected(type)"
+          <button *ngFor="let type of availableTypes" class="type-button" [class.selected]="isTypeSelected(type)"
             [style.background-color]="isTypeSelected(type) ? getTypeColor(type) : 'transparent'"
             [style.border-color]="getTypeColor(type)"
-            [style.color]="isTypeSelected(type) ? 'white' : getTypeColor(type)"
-            (click)="editMode && toggleType(type)"
+            [style.color]="isTypeSelected(type) ? 'white' : getTypeColor(type)" (click)="editMode && toggleType(type)"
             [disabled]="!editMode">
             {{ type | titlecase }}
           </button>
@@ -63,20 +51,39 @@
 
         <div class="selected-types" *ngIf="profile.favoriteTypes.length > 0">
           <strong>Seleccionados:</strong>
-          <span
-            *ngFor="let type of profile.favoriteTypes"
-            class="type-badge"
+          <span *ngFor="let type of profile.favoriteTypes" class="type-badge"
             [style.background-color]="getTypeColor(type)">
             {{ type | titlecase }}
           </span>
         </div>
       </div>
 
+      <div class="form-section">
+        <h2>Géneros de Películas Favoritos</h2>
+        <p class="section-description">
+          Selecciona los géneros de películas que más te gustan
+        </p>
+
+        <div class="types-grid">
+          <button *ngFor="let genre of availableMovieGenres" class="type-button"
+            [class.selected]="isMovieGenreSelected(genre)"
+            [style.background-color]="isMovieGenreSelected(genre) ? '#6a1b9a' : 'transparent'"
+            [style.border-color]="'#6a1b9a'" [style.color]="isMovieGenreSelected(genre) ? 'white' : '#6a1b9a'"
+            (click)="editMode && toggleMovieGenre(genre)" [disabled]="!editMode">
+            {{ genre }}
+          </button>
+        </div>
+
+        <div class="selected-types" *ngIf="profile.favoriteMovieGenres.length > 0">
+          <strong>Seleccionados:</strong>
+          <span *ngFor="let genre of profile.favoriteMovieGenres" class="type-badge" style="background-color: #6a1b9a">
+            {{ genre }}
+          </span>
+        </div>
+      </div>
+
       <div class="actions">
-        <button
-          *ngIf="!editMode"
-          class="edit-btn"
-          (click)="toggleEditMode()">
+        <button *ngIf="!editMode" class="edit-btn" (click)="toggleEditMode()">
           Editar Perfil
         </button>
 
@@ -100,19 +107,14 @@
       <div class="modal-header-selector">
         <h2>Elige tu Pokémon Favorito</h2>
         <div class="search-box">
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            placeholder="Buscar por nombre o ID..."
+          <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar por nombre o ID..."
             (keyup.enter)="searchPokemon()">
           <button (click)="searchPokemon()">🔍 Buscar</button>
         </div>
       </div>
 
       <div class="pokemon-grid-selector" *ngIf="!loadingPokemons">
-        <div
-          *ngFor="let pokemon of availablePokemons"
-          class="pokemon-card-selector"
+        <div *ngFor="let pokemon of availablePokemons" class="pokemon-card-selector"
           (click)="selectPokemonAvatar(pokemon)">
           <img [src]="pokemon.image" [alt]="pokemon.name">
           <p>{{ pokemon.name | titlecase }}</p>

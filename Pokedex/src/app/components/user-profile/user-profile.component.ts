@@ -9,11 +9,12 @@ import { UserService, UserProfile } from '../../services/user.service';
   styleUrls: ['./user-profile.component.scss']
 })
 export class UserProfileComponent implements OnInit {
-  profile: UserProfile = {
+    profile: UserProfile = {
     nickname: '',
     email: '',
     favoriteTypes: [],
-    avatar: ''
+    avatar: '',
+    favoriteMovieGenres: [] as string[]
   };
 
   editMode: boolean = false;
@@ -30,14 +31,30 @@ export class UserProfileComponent implements OnInit {
     'ice', 'dark', 'fairy'
   ];
 
+  availableMovieGenres: string[] = [
+  'Acción',
+  'Comedia',
+  'Drama',
+  'Ciencia Ficción',
+  'Terror',
+  'Romance',
+  'Animación',
+  'Fantasía',
+  'Documental',
+  'Suspenso'
+];
+
   constructor(
     private userService: UserService,
     private pokemonService: PokemonService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
-    this.loadProfile();
+  const storedProfile = sessionStorage.getItem('userProfile');
+  if (storedProfile) {
+    this.profile = JSON.parse(storedProfile);
   }
+}
 
   loadProfile(): void {
     this.profile = { ...this.userService.getUserProfile() };
@@ -50,15 +67,29 @@ export class UserProfileComponent implements OnInit {
     this.editMode = !this.editMode;
   }
 
-  saveProfile(): void {
-    this.userService.updateUserProfile(this.profile);
-    this.editMode = false;
-    this.savedMessage = true;
+isMovieGenreSelected(genre: string): boolean {
+  return this.profile.favoriteMovieGenres.includes(genre);
+}
 
-    setTimeout(() => {
-      this.savedMessage = false;
-    }, 3000);
+toggleMovieGenre(genre: string): void {
+  if (!this.editMode) return;
+
+  const index = this.profile.favoriteMovieGenres.indexOf(genre);
+
+  if (index >= 0) {
+    this.profile.favoriteMovieGenres.splice(index, 1);
+  } else {
+    this.profile.favoriteMovieGenres.push(genre);
   }
+}
+
+  saveProfile(): void {
+  sessionStorage.setItem('userProfile', JSON.stringify(this.profile));
+  this.savedMessage = true;
+  this.editMode = false;
+
+  setTimeout(() => (this.savedMessage = false), 3000);
+}
 
   toggleType(type: string): void {
     const index = this.profile.favoriteTypes.indexOf(type);

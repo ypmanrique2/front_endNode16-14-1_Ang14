@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string;
   favoriteTypes: string[];
   avatar: string;
+  favoriteMovieGenres: string[];
 }
 
 @Injectable({
@@ -18,21 +19,32 @@ export class UserService {
     nickname: 'iptdevs',
     email: 'iptdevs@pokemon.com',
     favoriteTypes: [],
-    avatar: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'
+    avatar: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png',
+    favoriteMovieGenres: [],
   };
 
   private userProfileSubject = new BehaviorSubject<UserProfile>(this.loadProfile());
   public userProfile$: Observable<UserProfile> = this.userProfileSubject.asObservable();
 
-  constructor() {}
+  constructor() { }
+
+  private STORAGE_KEY = 'user_profile';
 
   getUserProfile(): UserProfile {
-    return this.userProfileSubject.value;
+    const stored = sessionStorage.getItem(this.STORAGE_KEY);
+    return stored
+      ? JSON.parse(stored)
+      : {
+        nickname: 'iptdevs',
+        email: '',
+        avatar: '',
+        favoriteMovieGenres: [],
+        favoriteTypes: []
+      };
   }
 
   updateUserProfile(profile: UserProfile): void {
-    localStorage.setItem(this.USER_KEY, JSON.stringify(profile));
-    this.userProfileSubject.next(profile);
+    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(profile));
   }
 
   private loadProfile(): UserProfile {
