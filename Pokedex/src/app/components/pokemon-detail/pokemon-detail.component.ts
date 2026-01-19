@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-
+// Componente para mostrar detalles del pokémon
 @Component({
   selector: 'app-pokemon-detail',
   templateUrl: './pokemon-detail.component.html',

@@ -31,18 +31,37 @@ export class UserProfileComponent implements OnInit {
     'ice', 'dark', 'fairy'
   ];
 
-  availableMovieGenres: string[] = [
-  'Acción',
+  movieGenres = [
+  'Accion',
+  'Aventura',
   'Comedia',
   'Drama',
-  'Ciencia Ficción',
-  'Terror',
-  'Romance',
-  'Animación',
   'Fantasía',
-  'Documental',
+  'Horror',
+  'Romance',
+  'CienciaFiccion',
   'Suspenso'
 ];
+
+getMovieGenreColor(genre: string): string {
+  const map: { [key: string]: string } = {
+    Accion: '#C03028',
+    Aventura: '#78C850',
+    Comedia: '#F8D030',
+    Drama: '#705898',
+    Fantasía: '#7038F8',
+    Horror: '#705848',
+    Romance: '#EE99AC',
+    CienciaFiccion: '#6890F0',
+    Suspenso: '#A040A0'
+  };
+
+  return map[genre] || '#A8A878';
+}
+
+  isMovieGenreSelected(genre: string): boolean {
+  return this.profile.favoriteMovieGenres.includes(genre);
+}
 
   constructor(
     private userService: UserService,
@@ -66,10 +85,6 @@ export class UserProfileComponent implements OnInit {
     }
     this.editMode = !this.editMode;
   }
-
-isMovieGenreSelected(genre: string): boolean {
-  return this.profile.favoriteMovieGenres.includes(genre);
-}
 
 toggleMovieGenre(genre: string): void {
   if (!this.editMode) return;

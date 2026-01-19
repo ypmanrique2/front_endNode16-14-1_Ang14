@@ -65,10 +65,11 @@
         </p>
 
         <div class="types-grid">
-          <button *ngFor="let genre of availableMovieGenres" class="type-button"
+          <button *ngFor="let genre of movieGenres" class="type-button"
             [class.selected]="isMovieGenreSelected(genre)"
-            [style.background-color]="isMovieGenreSelected(genre) ? '#6a1b9a' : 'transparent'"
-            [style.border-color]="'#6a1b9a'" [style.color]="isMovieGenreSelected(genre) ? 'white' : '#6a1b9a'"
+            [style.background-color]="isMovieGenreSelected(genre) ? getMovieGenreColor(genre) : 'transparent'"
+            [style.border-color]="getMovieGenreColor(genre)"
+            [style.color]="isMovieGenreSelected(genre) ? 'white' : getMovieGenreColor(genre)"
             (click)="editMode && toggleMovieGenre(genre)" [disabled]="!editMode">
             {{ genre }}
           </button>
@@ -76,7 +77,8 @@
 
         <div class="selected-types" *ngIf="profile.favoriteMovieGenres.length > 0">
           <strong>Seleccionados:</strong>
-          <span *ngFor="let genre of profile.favoriteMovieGenres" class="type-badge" style="background-color: #6a1b9a">
+          <span *ngFor="let genre of profile.favoriteMovieGenres" class="type-badge"
+            [style.background-color]="getMovieGenreColor(genre)">
             {{ genre }}
           </span>
         </div>
