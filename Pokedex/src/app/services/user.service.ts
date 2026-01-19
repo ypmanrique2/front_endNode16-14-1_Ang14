@@ -2,43 +2,41 @@ import { Injectable } from '@angular/core';
 
 import { BehaviorSubject, Observable } from 'rxjs';
 
+export interface UserProfile {
+  nickname: string;
+  email: string;
+  favoriteTypes: string[];
+  avatar: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
-  public isAuthenticated$: Observable<boolean> = this.isAuthenticatedSubject.asObservable();
+export class UserService {
+  private readonly USER_KEY = 'user_profile';
+  private defaultProfile: UserProfile = {
+    nickname: 'iptdevs',
+    email: 'iptdevs@pokemon.com',
+    favoriteTypes: [],
+    avatar: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'
+  };
 
-  private readonly VALID_USERNAME = 'iptdevs';
-  private readonly VALID_PASSWORD = '123456';
-  private readonly TOKEN_KEY = 'auth_token';
+  private userProfileSubject = new BehaviorSubject<UserProfile>(this.loadProfile());
+  public userProfile$: Observable<UserProfile> = this.userProfileSubject.asObservable();
 
   constructor() {}
 
-  login(username: string, password: string): boolean {
-    if (username === this.VALID_USERNAME && password === this.VALID_PASSWORD) {
-      const token = this.generateToken();
-      localStorage.setItem(this.TOKEN_KEY, token);
-      this.isAuthenticatedSubject.next(true);
-      return true;
-    }
-    return false;
+  getUserProfile(): UserProfile {
+    return this.userProfileSubject.value;
   }
 
-  logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    this.isAuthenticatedSubject.next(false);
+  updateUserProfile(profile: UserProfile): void {
+    localStorage.setItem(this.USER_KEY, JSON.stringify(profile));
+    this.userProfileSubject.next(profile);
   }
 
-  isLoggedIn(): boolean {
-    return this.hasToken();
-  }
-
-  private hasToken(): boolean {
-    return !!localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  private generateToken(): string {
-    return btoa(`${this.VALID_USERNAME}:${Date.now()}`);
+  private loadProfile(): UserProfile {
+    const saved = localStorage.getItem(this.USER_KEY);
+    return saved ? JSON.parse(saved) : this.defaultProfile;
   }
 }
